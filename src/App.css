@@ -32,6 +32,10 @@ body {
   padding: 1rem;
 }
 
+h2 {
+  margin: 0;
+  padding-top: 70px;
+}
 
 .player {
   position: fixed;
@@ -50,7 +54,6 @@ body {
   outline: 2px auto blue;
 }
 .transcript {
-  padding-top: 60px;
   display: flex;
   flex-direction: column;
 }
