@@ -1,41 +1,118 @@
+html {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+body {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  max-height: 100vh;
+
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+}
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  max-height: 100vh;
+}
+.app {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  padding: 1rem;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
+
+.player {
+  position: fixed;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+  opacity: 0.9;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.player button, .player button:focus, .player audio {
+  border-radius: 44px;
+  background-color: #f1f3f4;
+  outline: none;
 }
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.player button.active {
+  outline: 2px auto blue;
+}
+.transcript {
+  padding-top: 60px;
+  display: flex;
+  flex-direction: column;
+}
+.load {
+  display: flex;
+  align-items: stretch;
+  margin-top: 2rem;
+  gap: 8px;
+}
+.load input {
+  flex: 1;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.transcript .exchange {
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+.transcript.playing .exchange {
+  user-select: none;
+}
+.transcript .exchange .meta {
+  display: flex;
+  flex-direction: row;
+  padding-top: 1em;
+}
+.transcript .exchange .meta .speakerName {
+  font-weight: bold;
+  text-align: left;
+  flex: 0 0 80px;
+}
+.transcript .exchange .meta .time {
+  text-align: right;
+  flex: 1;
+}
+
+.transcript .exchange .content {
+  text-align: left;
+}
+.transcript .exchange .content .text {
+  margin: 0;
+}
+.transcript .exchange .content .text .word {
+  cursor: pointer;
+}
+.transcript .exchange .content .text .word:hover {
+  background-color: #8e9fff50;
+}
+
+.transcript .exchange .content .text .current {
+  color: black;
+  background-color: yellow;
+}
+
+@media (prefers-color-scheme: dark) {
+  .player button, .player button:focus, .player audio {
+    opacity: 1;
+    background-color: #484848;
+    outline: none;
   }
-  to {
-    transform: rotate(360deg);
+  .player button.active {
+    outline: 2px auto blue;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}

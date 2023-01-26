@@ -9,5 +9,11 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script type="text/javascript">
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/src/main.tsx');
+        navigator.serviceWorker.register('/');
+      }
+    </script>
   </body>
 </html>
