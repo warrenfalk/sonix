@@ -48,8 +48,6 @@ type HistoricRecord = {
   lastVisit: number,
 }
 
-let forceScroll = false;
-
 type TranscriptScreenProps = {
   title: string | undefined;
   scrollLock: boolean;
@@ -67,6 +65,7 @@ export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScr
   const appElement = useRef<HTMLDivElement>(null);
   const audio = useRef<HTMLAudioElement>(null);
   const interval = useRef<number>();
+  const lastScroll = useRef<number>(0);
   const onCurrent = useCallback((rect: DOMRect, word: string) => {
     const app = appElement.current;
     if (!app) {
@@ -76,15 +75,18 @@ export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScr
     const threshTop = app.clientHeight / 4;
     const threshBottom = threshTop * 3;
     if (!scrollLock && (rect.y > threshBottom || rect.y < threshTop)) {
-      forceScroll = true;
-      app.scrollTo({ top: Math.max(0, top + rect.y - threshTop), behavior: 'smooth' });
-      forceScroll = false;
+      const scrollTarget = Math.round(Math.max(0, top + rect.y - threshTop));
+      console.log('scrolling to', scrollTarget)
+      app.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+      // make it so that the scrolls for the next 200 ms are not considered to originate from the user
+      lastScroll.current = new Date().getTime();
     }
   }, [scrollLock]);
   useEffect(() => {
     let handle: number;
     const onFrame = (time: number) => {
-      const now = audio.current?.currentTime || 0;
+      // we lead it by 0.2 seconds to account for render delay
+      const now = (audio.current?.currentTime || 0) + 0.2;
       const exch = transcript?.find(e => inRange(e.ts, now));
       const word = exch?.ws.find(w => inRange(w[0], now));
       setCurrent(prev => {
@@ -106,10 +108,19 @@ export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScr
       className="app"
       ref={appElement}
       onScroll={(e) => {
-        if (forceScroll) {
-          return;
+        // if there hasn't been a scroll for a while, then assume this is manual
+        // if we ever scroll automatically, we set last scroll just before so that
+        // all scroll events coming immediately after are not considered manual
+        // although, this is hacky, this overcomes the shortcoming of the tools
+        // browsers give for dealing with scrolling
+        const sinceLast = e.timeStamp - lastScroll.current;
+        const isManual = sinceLast > 200;
+        lastScroll.current = e.timeStamp;
+
+        if (!scrollLock && isManual) {
+          console.log('scroll set by user');
+          setScrollLock(true);
         }
-        setScrollLock(true);
       }}>
       <h2>{title}</h2>
       <div className="player">
