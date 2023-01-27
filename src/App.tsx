@@ -3,7 +3,7 @@ import './App.css'
 import React from 'react';
 import { Content, loadContent, TranscriptScreen, Exchange, ExchangeWithRange, CurrentWord, TimeRange, inRange } from './TranscriptScreen';
 import classNames from 'classnames';
-import {MdPlayArrow, MdPause, MdLockOutline, MdLockOpen} from "react-icons/md"
+import {MdPlayArrow, MdPause, MdLockOutline, MdLockOpen, MdContentPaste} from "react-icons/md"
 import {IconContext} from 'react-icons';
 
 
@@ -110,6 +110,13 @@ const App = React.memo(function () {
             className={classNames({ active: scrollLock })}
             onClick={() => { setScrollLock(!scrollLock); }}>
             {scrollLock ? <MdLockOutline /> : <MdLockOpen /> }
+          </button>
+          <button
+            onClick={async () => {
+              const info = await navigator.clipboard.readText();
+              console.log(info)
+            }}>
+            <MdContentPaste />
           </button>
         </IconContext.Provider>
       </div>

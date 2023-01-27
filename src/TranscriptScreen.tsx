@@ -4,6 +4,7 @@ import React from 'react';
 import { LoadForm } from './LoadForm';
 import {Exchange} from './Exchange';
 import { HistoryView } from './HistoryView';
+import { putHistoryRecord } from './historyStore';
 
 export type Transcript = {
   striked: readonly unknown[];
@@ -169,11 +170,9 @@ export async function loadContent(id: string) {
   const transcript = await transcriptResponse.json();
   const startPos: number = JSON.parse(localStorage.getItem(`lastPos.${id}`) || "0");
   localStorage.setItem('lastId', JSON.stringify(id));
-  const history = JSON.parse(localStorage.getItem('history') || "[]") as readonly HistoricRecord[];
   const lastVisit = new Date().getTime();
-  const thisTime: HistoricRecord = {id, title, lastVisit}
-  const nextHistory = [thisTime, ...history.filter(h => h.id !== id)];
-  localStorage.setItem('history', JSON.stringify(nextHistory));
+  const record: HistoricRecord = {id, title, lastVisit}
+  putHistoryRecord(record);
   const c: Content = {id, title, transcript, mp3Url, startPos};
   return c;
 }
@@ -184,6 +183,8 @@ export function formatTimestamp(ts: number) {
   const totalHours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes - totalHours * 60;
   const seconds = totalSeconds - totalMinutes * 60;
-  return [totalHours, minutes, seconds].map(c => c.toString().padStart(2, '0')).join(':');
+  return [totalHours, minutes, seconds]
+    .map(c => c.toString().padStart(2, '0'))
+    .join(':');
 }
 
