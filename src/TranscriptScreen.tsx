@@ -3,6 +3,7 @@ import classNames from 'classnames';
 import React from 'react';
 import { LoadForm } from './LoadForm';
 import {Exchange} from './Exchange';
+import { HistoryView } from './HistoryView';
 
 export type Transcript = {
   striked: readonly unknown[];
@@ -165,6 +166,12 @@ export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScr
           setContent(c);
         });
       }} />
+
+      <HistoryView onGo={(id) => {
+        loadContent(id).then(c => {
+          setContent(c);
+        });
+      }}/>
     </div>
   );
 });
