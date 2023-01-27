@@ -83,6 +83,9 @@ export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScr
       lastScroll.current = new Date().getTime();
     }
   }, [scrollLock]);
+  const onSeekTo = useCallback((time: number) => {
+    audio.current!.currentTime = time;
+  }, [])
   useEffect(() => {
     let handle: number;
     const onFrame = (time: number) => {
@@ -156,9 +159,7 @@ export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScr
         transcript={transcript}
         current={current}
         onCurrent={onCurrent}
-        onSeekTo={(time) => {
-          audio.current!.currentTime = time;
-        }}
+        onSeekTo={onSeekTo}
       />
 
       <LoadForm onGo={(id) => {
