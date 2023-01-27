@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 
-type HistoryRecord = {
+export type HistoryRecord = {
   title: string,
   id: string,
   lastVisit: number,
 };
-
-
 
 class History extends EventTarget {
   records: readonly HistoryRecord[] = JSON.parse(localStorage.getItem('history') || "[]");

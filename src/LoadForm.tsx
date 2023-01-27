@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import React from 'react';
+import { parseSonixUrl } from './sonixData';
 
 type LoadFormProps = {
   onGo: (id: string) => void;
 };
 export function LoadForm({ onGo }: LoadFormProps) {
   const [url, setUrl] = useState('');
-  const match = /sonix.ai\/r\/([^/]+)/.exec(url);
-  const id = match?.[1];
+  const id = parseSonixUrl(url);
   return (
     <div className="load">
       <input
@@ -20,3 +19,4 @@ export function LoadForm({ onGo }: LoadFormProps) {
     </div>
   );
 }
+

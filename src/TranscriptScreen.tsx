@@ -4,21 +4,9 @@ import React from 'react';
 import { LoadForm } from './LoadForm';
 import {Exchange} from './Exchange';
 import { HistoryView } from './HistoryView';
-import { putHistoryRecord } from './historyStore';
+import { putHistoryRecord, HistoryRecord } from './historyStore';
+import {Content, fetchContent, TimeRange} from './sonixData'
 
-export type Transcript = {
-  striked: readonly unknown[];
-  transcript: readonly Exchange[];
-}
-
-export type Exchange = {
-  // the speaker's name
-  sn: string;
-  // the total span of this segment
-  ts: readonly [number, number];
-  // the individual word starts
-  ws: readonly [number, string][];
-}
 
 export type ExchangeWithRange = {
   // the speaker's name
@@ -29,25 +17,9 @@ export type ExchangeWithRange = {
   ws: readonly [TimeRange, string][];
 }
 
-export type TimeRange = readonly [number, number];
-
-export type Content = {
-  id: string;
-  title: string;
-  transcript: Transcript;
-  mp3Url: string;
-  startPos: number;
-};
-
 export type CurrentWord = {
   exch: TimeRange | undefined;
   word: TimeRange | undefined;
-}
-
-type HistoricRecord = {
-  id: string,
-  title: string,
-  lastVisit: number,
 }
 
 type TranscriptScreenProps = {
@@ -58,9 +30,9 @@ type TranscriptScreenProps = {
   setScrollLock: (v: boolean) => void;
   transcript: readonly ExchangeWithRange[] | undefined;
   current: CurrentWord | undefined;
-  setContent: (content: Content) => void;
+  loadContent: (id: string) => Promise<void>;
 };
-export const TranscriptScreen = React.memo(function ({playing, onSeekTo, title, scrollLock, setScrollLock, current, transcript, setContent }: TranscriptScreenProps) {
+export const TranscriptScreen = React.memo(function ({playing, onSeekTo, title, scrollLock, setScrollLock, current, transcript, loadContent }: TranscriptScreenProps) {
   const appElement = useRef<HTMLDivElement>(null);
   const lastScroll = useRef<number>(0);
   const onCurrent = useCallback((rect: DOMRect, word: string) => {
@@ -110,15 +82,11 @@ export const TranscriptScreen = React.memo(function ({playing, onSeekTo, title, 
       />
 
       <LoadForm onGo={(id) => {
-        loadContent(id).then(c => {
-          setContent(c);
-        });
+        loadContent(id);
       }} />
 
       <HistoryView onGo={(id) => {
-        loadContent(id).then(c => {
-          setContent(c);
-        });
+        loadContent(id);
       }}/>
     </div>
   );
@@ -157,24 +125,6 @@ export function rangesEqual(r1: TimeRange | undefined, r2: TimeRange | undefined
   if (r1 === undefined || r2 === undefined)
     return false;
   return r1[0] === r2[0] && r1[1] === r2[1];
-}
-
-export async function loadContent(id: string) {
-  const filesUrl = `https://sonix.ai/embed/${id}/file.json`
-  const transcriptUrl = `https://sonix.ai/embed/${id}/transcript.json`
-  const filesResponse = await fetch(filesUrl);
-  const files = await filesResponse.json();
-  const title = files.name;
-  const mp3Url = files.mp3Url;
-  const transcriptResponse = await fetch(transcriptUrl);
-  const transcript = await transcriptResponse.json();
-  const startPos: number = JSON.parse(localStorage.getItem(`lastPos.${id}`) || "0");
-  localStorage.setItem('lastId', JSON.stringify(id));
-  const lastVisit = new Date().getTime();
-  const record: HistoricRecord = {id, title, lastVisit}
-  putHistoryRecord(record);
-  const c: Content = {id, title, transcript, mp3Url, startPos};
-  return c;
 }
 
 export function formatTimestamp(ts: number) {

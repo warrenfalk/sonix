@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './App.css'
 import React from 'react';
-import { Content, loadContent, TranscriptScreen, Exchange, ExchangeWithRange, CurrentWord, TimeRange, inRange } from './TranscriptScreen';
+import {TranscriptScreen, ExchangeWithRange, CurrentWord, inRange } from './TranscriptScreen';
 import classNames from 'classnames';
 import {MdPlayArrow, MdPause, MdLockOutline, MdLockOpen, MdContentPaste} from "react-icons/md"
 import {IconContext} from 'react-icons';
+import { Content, Exchange, fetchContent, parseSonixUrl, TimeRange } from './sonixData';
+import { HistoryRecord, putHistoryRecord } from './historyStore';
 
 
 function makeTimeIndex(list: readonly Exchange[]): ExchangeWithRange[] {
@@ -15,12 +17,22 @@ function makeTimeIndex(list: readonly Exchange[]): ExchangeWithRange[] {
   });
 }
 
+export async function loadContent(id: string) {
+}
+
 const App = React.memo(function () {
   const [playing, setPlaying] = useState(false);
   const interval = useRef<number>();
   const audio = useRef<HTMLAudioElement>(null);
-  
   const [content, setContent] = useState<Content>();
+  const loadContent = useCallback(async (id: string) => {
+    const content = await fetchContent(id);
+    const {title} = content;
+    const lastVisit = new Date().getTime();
+    const record: HistoryRecord = {id, title, lastVisit}
+    putHistoryRecord(record);
+    setContent(content);
+  }, [])
   const exchanges = content?.transcript.transcript;
   const transcript = useMemo(() => exchanges && makeTimeIndex(exchanges), [exchanges])
   const [current, setCurrent] = useState<CurrentWord>();
@@ -79,7 +91,7 @@ const App = React.memo(function () {
         setScrollLock={setScrollLock}
         transcript={transcript}
         current={current}
-        setContent={setContent}
+        loadContent={loadContent}
       />
       <div className="player">
         <IconContext.Provider value={{size: '1.5em'}}>
@@ -113,8 +125,9 @@ const App = React.memo(function () {
           </button>
           <button
             onClick={async () => {
-              const info = await navigator.clipboard.readText();
-              console.log(info)
+              const url = await navigator.clipboard.readText();
+              const id = parseSonixUrl(url);
+              id && loadContent(id)
             }}>
             <MdContentPaste />
           </button>
