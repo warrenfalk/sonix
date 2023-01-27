@@ -3,6 +3,8 @@ import './App.css'
 import React from 'react';
 import { Content, loadContent, TranscriptScreen, Exchange, ExchangeWithRange, CurrentWord, TimeRange, inRange } from './TranscriptScreen';
 import classNames from 'classnames';
+import {MdPlayArrow, MdPause, MdLockOutline, MdLockOpen} from "react-icons/md"
+import {IconContext} from 'react-icons';
 
 
 function makeTimeIndex(list: readonly Exchange[]): ExchangeWithRange[] {
@@ -80,30 +82,36 @@ const App = React.memo(function () {
         setContent={setContent}
       />
       <div className="player">
-        <audio
-          key={audioUrl}
-          ref={audio}
-          onPlay={() => {
-            setPlaying(true);
-            interval.current = setInterval(() => {
-              const time = audio.current?.currentTime;
-              if (time) {
-                savePos(time);
-              }
-            }, 1000);
-          }}
-          onPause={() => {
-            setPlaying(false);
-            clearInterval(interval.current);
-          }}
-          controls>
-          <source src={`${audioUrl}#t=${startPos || 0}`} />
-        </audio>
-        <button
-          className={classNames({ active: scrollLock })}
-          onClick={() => { setScrollLock(!scrollLock); }}>
-          S
-        </button>
+        <IconContext.Provider value={{size: '1.5em'}}>
+          <audio
+            key={audioUrl}
+            ref={audio}
+            onPlay={() => {
+              setPlaying(true);
+              interval.current = setInterval(() => {
+                const time = audio.current?.currentTime;
+                if (time) {
+                  savePos(time);
+                }
+              }, 1000);
+            }}
+            onPause={() => {
+              setPlaying(false);
+              clearInterval(interval.current);
+            }}>
+            <source src={`${audioUrl}#t=${startPos || 0}`} />
+          </audio>
+          <button
+            className={classNames({active: playing})}
+            onClick={() => {playing ? audio.current?.pause() : audio.current?.play()}}>
+            {playing ? <MdPause /> : <MdPlayArrow />}
+          </button>
+          <button
+            className={classNames({ active: scrollLock })}
+            onClick={() => { setScrollLock(!scrollLock); }}>
+            {scrollLock ? <MdLockOutline /> : <MdLockOpen /> }
+          </button>
+        </IconContext.Provider>
       </div>
     </>
   )

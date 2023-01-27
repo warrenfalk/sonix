@@ -39,15 +39,22 @@ h2 {
 
 .player button, .player button:focus {
   outline: none;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .player {
-  margin: 8px;
+  width: calc(100vw - 16px);
+  padding: 8px;
   position: fixed;
   display: flex;
   flex-direction: row;
   align-items: stretch;
   gap: 8px;
   opacity: 0.9;
+  justify-content: center;
 }
 .player button, .player audio {
   border-radius: 44px;
