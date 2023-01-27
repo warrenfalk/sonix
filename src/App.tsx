@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './App.css'
 import React from 'react';
-import { Content, loadContent, TranscriptScreen, Exchange, ExchangeWithRange, CurrentWord, TimeRange } from './TranscriptScreen';
+import { Content, loadContent, TranscriptScreen, Exchange, ExchangeWithRange, CurrentWord, TimeRange, inRange } from './TranscriptScreen';
+import classNames from 'classnames';
 
 
 function makeTimeIndex(list: readonly Exchange[]): ExchangeWithRange[] {
@@ -13,6 +14,10 @@ function makeTimeIndex(list: readonly Exchange[]): ExchangeWithRange[] {
 }
 
 const App = React.memo(function () {
+  const [playing, setPlaying] = useState(false);
+  const interval = useRef<number>();
+  const audio = useRef<HTMLAudioElement>(null);
+  
   const [content, setContent] = useState<Content>();
   const exchanges = content?.transcript.transcript;
   const transcript = useMemo(() => exchanges && makeTimeIndex(exchanges), [exchanges])
@@ -22,6 +27,29 @@ const App = React.memo(function () {
   const savePos = useCallback((time: number) => {
     localStorage.setItem(`lastPos.${id}`, JSON.stringify(time))
   }, [id])
+  const onSeekTo = useCallback((time: number) => {
+    audio.current!.currentTime = time;
+  }, [])
+  useEffect(() => {
+    let handle: number;
+    const onFrame = (time: number) => {
+      // we lead it by 0.2 seconds to account for render delay
+      const now = (audio.current?.currentTime || 0) + 0.2;
+      const exch = transcript?.find(e => inRange(e.ts, now));
+      const word = exch?.ws.find(w => inRange(w[0], now));
+      setCurrent(prev => {
+        const nextVal = { exch: exch?.ts, word: word?.[0] };
+        if (prev?.exch === nextVal.exch && prev?.word === nextVal.word)
+          return prev;
+        return nextVal;
+      });
+      handle = window.requestAnimationFrame(onFrame);
+    };
+    handle = window.requestAnimationFrame(onFrame);
+    return () => {
+      window.cancelAnimationFrame(handle);
+    };
+  }, [transcript, audio.current]);
   useEffect(() => {
     try {
       if (!content) {
@@ -37,20 +65,49 @@ const App = React.memo(function () {
       console.error(e);
     }
   }, [content === undefined])
+  const audioUrl = content?.mp3Url;
+  const startPos = content?.startPos;
   return (
-    <TranscriptScreen
-      title={content?.title}
-      scrollLock={scrollLock}
-      setScrollLock={setScrollLock}
-      startPos={content?.startPos}
-      transcript={transcript}
-      current={current}
-      setCurrent={setCurrent}
-      audioUrl={content?.mp3Url}
-      savePos={savePos}
-      setContent={setContent}
-    />
+    <>
+      <TranscriptScreen
+        playing={playing}
+        onSeekTo={onSeekTo}
+        title={content?.title}
+        scrollLock={scrollLock}
+        setScrollLock={setScrollLock}
+        transcript={transcript}
+        current={current}
+        setContent={setContent}
+      />
+      <div className="player">
+        <audio
+          key={audioUrl}
+          ref={audio}
+          onPlay={() => {
+            setPlaying(true);
+            interval.current = setInterval(() => {
+              const time = audio.current?.currentTime;
+              if (time) {
+                savePos(time);
+              }
+            }, 1000);
+          }}
+          onPause={() => {
+            setPlaying(false);
+            clearInterval(interval.current);
+          }}
+          controls>
+          <source src={`${audioUrl}#t=${startPos || 0}`} />
+        </audio>
+        <button
+          className={classNames({ active: scrollLock })}
+          onClick={() => { setScrollLock(!scrollLock); }}>
+          S
+        </button>
+      </div>
+    </>
   )
 })
 
 export default App
+

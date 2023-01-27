@@ -50,22 +50,17 @@ type HistoricRecord = {
 }
 
 type TranscriptScreenProps = {
+  playing: boolean;
+  onSeekTo: (time: number) => void;
   title: string | undefined;
   scrollLock: boolean;
   setScrollLock: (v: boolean) => void;
   transcript: readonly ExchangeWithRange[] | undefined;
   current: CurrentWord | undefined;
-  setCurrent: (cb: (c: CurrentWord | undefined) => CurrentWord | undefined) => void;
-  audioUrl: string | undefined;
-  startPos: number | undefined;
-  savePos: (pos: number) => void;
   setContent: (content: Content) => void;
 };
-export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScrollLock, startPos, current, setCurrent, audioUrl, transcript, savePos, setContent }: TranscriptScreenProps) {
-  const [playing, setPlaying] = useState(false);
+export const TranscriptScreen = React.memo(function ({playing, onSeekTo, title, scrollLock, setScrollLock, current, transcript, setContent }: TranscriptScreenProps) {
   const appElement = useRef<HTMLDivElement>(null);
-  const audio = useRef<HTMLAudioElement>(null);
-  const interval = useRef<number>();
   const lastScroll = useRef<number>(0);
   const onCurrent = useCallback((rect: DOMRect, word: string) => {
     const app = appElement.current;
@@ -83,29 +78,6 @@ export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScr
       lastScroll.current = new Date().getTime();
     }
   }, [scrollLock]);
-  const onSeekTo = useCallback((time: number) => {
-    audio.current!.currentTime = time;
-  }, [])
-  useEffect(() => {
-    let handle: number;
-    const onFrame = (time: number) => {
-      // we lead it by 0.2 seconds to account for render delay
-      const now = (audio.current?.currentTime || 0) + 0.2;
-      const exch = transcript?.find(e => inRange(e.ts, now));
-      const word = exch?.ws.find(w => inRange(w[0], now));
-      setCurrent(prev => {
-        const nextVal = { exch: exch?.ts, word: word?.[0] };
-        if (prev?.exch === nextVal.exch && prev?.word === nextVal.word)
-          return prev;
-        return nextVal;
-      });
-      handle = window.requestAnimationFrame(onFrame);
-    };
-    handle = window.requestAnimationFrame(onFrame);
-    return () => {
-      window.cancelAnimationFrame(handle);
-    };
-  }, [transcript, audio.current]);
 
   return (
     <div
@@ -127,32 +99,6 @@ export const TranscriptScreen = React.memo(function ({ title, scrollLock, setScr
         }
       }}>
       <h2>{title}</h2>
-      <div className="player">
-        <audio
-          key={audioUrl}
-          ref={audio}
-          onPlay={() => {
-            setPlaying(true);
-            interval.current = setInterval(() => {
-              const time = audio.current?.currentTime;
-              if (time) {
-                savePos(time);
-              }
-            }, 1000);
-          }}
-          onPause={() => {
-            setPlaying(false);
-            clearInterval(interval.current);
-          }}
-          controls>
-          <source src={`${audioUrl}#t=${startPos || 0}`} />
-        </audio>
-        <button
-          className={classNames({ active: scrollLock })}
-          onClick={() => { setScrollLock(!scrollLock); }}>
-          S
-        </button>
-      </div>
 
       <TranscriptView
         playing={playing}

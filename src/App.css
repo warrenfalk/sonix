@@ -37,7 +37,11 @@ h2 {
   padding-top: 70px;
 }
 
+.player button, .player button:focus {
+  outline: none;
+}
 .player {
+  margin: 8px;
   position: fixed;
   display: flex;
   flex-direction: row;
@@ -45,14 +49,18 @@ h2 {
   gap: 8px;
   opacity: 0.9;
 }
-.player button, .player button:focus, .player audio {
+.player button, .player audio {
   border-radius: 44px;
   background-color: #f1f3f4;
   outline: none;
+  border: none;
+  min-width: 54px;
+  height: 54px;
 }
 .player button.active {
-  outline: 2px auto blue;
+  background-color: #6e91a3;
 }
+
 .transcript {
   display: flex;
   flex-direction: column;
@@ -109,13 +117,9 @@ h2 {
 }
 
 @media (prefers-color-scheme: dark) {
-  .player button, .player button:focus, .player audio {
+  .player button, .player audio {
     opacity: 1;
     background-color: #484848;
-    outline: none;
-  }
-  .player button.active {
-    outline: 2px auto blue;
   }
 }
 
