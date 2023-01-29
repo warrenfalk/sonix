@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Word } from './Word';
-import { TimeRange, formatTimestamp, rangesEqual } from './TranscriptScreen';
+import React, { useState } from "react";
+import { Word } from "./Word";
+import { formatTimestamp, rangesEqual } from "./TranscriptScreen";
+import { TimeRange } from "./sonixData";
 
 type ExchangeProps = {
   currentWord: TimeRange | undefined;
@@ -10,7 +11,14 @@ type ExchangeProps = {
   onCurrent: (rect: DOMRect, word: string) => void;
   onSeekTo: (time: number) => void;
 };
-export const Exchange = React.memo(function ({ ts, sn, ws, currentWord, onCurrent, onSeekTo }: ExchangeProps) {
+export const Exchange = React.memo(function ({
+  ts,
+  sn,
+  ws,
+  currentWord,
+  onCurrent,
+  onSeekTo,
+}: ExchangeProps) {
   const [selectable, setSelectable] = useState(false);
   return (
     <div className="exchange">
@@ -18,7 +26,9 @@ export const Exchange = React.memo(function ({ ts, sn, ws, currentWord, onCurren
         <div className="speakerName">{sn}</div>
         <div className="time">{formatTimestamp(ts[0])}</div>
       </div>
-      <div className="content" style={{userSelect: selectable === false ? "none" : "text"}}>
+      <div
+        className="content"
+        style={{ userSelect: selectable === false ? "none" : "text" }}>
         <p className="text">
           {ws.map(([range, word], i) => (
             <Word

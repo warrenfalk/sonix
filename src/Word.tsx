@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import classNames from 'classnames';
-import React from 'react';
+import { useEffect, useRef } from "react";
+import classNames from "classnames";
+import React from "react";
 
 type WordProps = {
   current: boolean;
@@ -10,9 +10,16 @@ type WordProps = {
   onSeekTo: (time: number) => void;
   enableSelection: (value: boolean) => void;
 };
-export const Word = React.memo(function ({ current, onSeekTo, start, word, onCurrent, enableSelection }: WordProps) {
-  const spb = /^\s*/.exec(word)?.[0] || '';
-  const spe = /\s*$/.exec(word)?.[0] || '';
+export const Word = React.memo(function ({
+  current,
+  onSeekTo,
+  start,
+  word,
+  onCurrent,
+  enableSelection,
+}: WordProps) {
+  const spb = /^\s*/.exec(word)?.[0] || "";
+  const spe = /\s*$/.exec(word)?.[0] || "";
   const trimmed = word.trim();
   const span = useRef<HTMLSpanElement>(null);
   const disableSeek = useRef(false);
@@ -25,7 +32,7 @@ export const Word = React.memo(function ({ current, onSeekTo, start, word, onCur
     <span
       onClick={() => {
         if (!disableSeek.current) {
-          onSeekTo(start)
+          onSeekTo(start);
         }
       }}>
       {spb.length ? <span>{spb}</span> : null}

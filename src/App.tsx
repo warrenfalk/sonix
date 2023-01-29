@@ -1,24 +1,45 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import './App.css'
-import React from 'react';
-import {TranscriptScreen, ExchangeWithRange, CurrentWord, inRange } from './TranscriptScreen';
-import classNames from 'classnames';
-import {MdPlayArrow, MdPause, MdLockOutline, MdLockOpen, MdContentPaste} from "react-icons/md"
-import {IconContext} from 'react-icons';
-import { Content, Exchange, fetchContent, parseSonixUrl, TimeRange } from './sonixData';
-import { HistoryRecord, putHistoryRecord } from './historyStore';
-
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import "./App.css";
+import React from "react";
+import {
+  TranscriptScreen,
+  ExchangeWithRange,
+  CurrentWord,
+  inRange,
+} from "./TranscriptScreen";
+import classNames from "classnames";
+import {
+  MdPlayArrow,
+  MdPause,
+  MdLockOutline,
+  MdLockOpen,
+  MdContentPaste,
+} from "react-icons/md";
+import { IconContext } from "react-icons";
+import {
+  Content,
+  Exchange,
+  fetchContent,
+  parseSonixUrl,
+  TimeRange,
+} from "./sonixData";
+import { HistoryRecord, putHistoryRecord } from "./historyStore";
 
 function makeTimeIndex(list: readonly Exchange[]): ExchangeWithRange[] {
-  return list.map(exchange => {
-    const {ts, ws} = exchange;
-    const withRange = ws.map((s, i) => [[s[0], (i === ws.length - 1) ? ts[1] : ws[i + 1][0]], s[1]] as [TimeRange, string]);
-    return {...exchange, ws: withRange};
+  return list.map((exchange) => {
+    const { ts, ws } = exchange;
+    const withRange = ws.map(
+      (s, i) =>
+        [[s[0], i === ws.length - 1 ? ts[1] : ws[i + 1][0]], s[1]] as [
+          TimeRange,
+          string,
+        ],
+    );
+    return { ...exchange, ws: withRange };
   });
 }
 
-export async function loadContent(id: string) {
-}
+export async function loadContent(id: string) {}
 
 const App = React.memo(function () {
   const [playing, setPlaying] = useState(false);
@@ -27,31 +48,37 @@ const App = React.memo(function () {
   const [content, setContent] = useState<Content>();
   const loadContent = useCallback(async (id: string) => {
     const content = await fetchContent(id);
-    const {title} = content;
+    const { title } = content;
     const lastVisit = new Date().getTime();
-    const record: HistoryRecord = {id, title, lastVisit}
+    const record: HistoryRecord = { id, title, lastVisit };
     putHistoryRecord(record);
     setContent(content);
-  }, [])
+  }, []);
   const exchanges = content?.transcript.transcript;
-  const transcript = useMemo(() => exchanges && makeTimeIndex(exchanges), [exchanges])
+  const transcript = useMemo(
+    () => exchanges && makeTimeIndex(exchanges),
+    [exchanges],
+  );
   const [current, setCurrent] = useState<CurrentWord>();
   const [scrollLock, setScrollLock] = useState(false);
   const id = content?.id;
-  const savePos = useCallback((time: number) => {
-    localStorage.setItem(`lastPos.${id}`, JSON.stringify(time))
-  }, [id])
+  const savePos = useCallback(
+    (time: number) => {
+      localStorage.setItem(`lastPos.${id}`, JSON.stringify(time));
+    },
+    [id],
+  );
   const onSeekTo = useCallback((time: number) => {
     audio.current!.currentTime = time;
-  }, [])
+  }, []);
   useEffect(() => {
     let handle: number;
     const onFrame = (time: number) => {
       // we lead it by 0.2 seconds to account for render delay
       const now = (audio.current?.currentTime || 0) + 0.2;
-      const exch = transcript?.find(e => inRange(e.ts, now));
-      const word = exch?.ws.find(w => inRange(w[0], now));
-      setCurrent(prev => {
+      const exch = transcript?.find((e) => inRange(e.ts, now));
+      const word = exch?.ws.find((w) => inRange(w[0], now));
+      setCurrent((prev) => {
         const nextVal = { exch: exch?.ts, word: word?.[0] };
         if (prev?.exch === nextVal.exch && prev?.word === nextVal.word)
           return prev;
@@ -67,18 +94,15 @@ const App = React.memo(function () {
   useEffect(() => {
     try {
       if (!content) {
-        const id = JSON.parse(localStorage.getItem('lastId') || "null");
+        const id = JSON.parse(localStorage.getItem("lastId") || "null");
         if (id) {
-          loadContent(id).then(c => {
-            setContent(c);
-          })
+          loadContent(id);
         }
       }
-    }
-    catch (e) {
+    } catch (e) {
       console.error(e);
     }
-  }, [content === undefined])
+  }, [content === undefined]);
   const audioUrl = content?.mp3Url;
   const startPos = content?.startPos;
   return (
@@ -94,7 +118,7 @@ const App = React.memo(function () {
         loadContent={loadContent}
       />
       <div className="player">
-        <IconContext.Provider value={{size: '1.5em'}}>
+        <IconContext.Provider value={{ size: "1.5em" }}>
           <audio
             key={audioUrl}
             ref={audio}
@@ -114,28 +138,31 @@ const App = React.memo(function () {
             <source src={`${audioUrl}#t=${startPos || 0}`} />
           </audio>
           <button
-            className={classNames({active: playing})}
-            onClick={() => {playing ? audio.current?.pause() : audio.current?.play()}}>
+            className={classNames({ active: playing })}
+            onClick={() => {
+              playing ? audio.current?.pause() : audio.current?.play();
+            }}>
             {playing ? <MdPause /> : <MdPlayArrow />}
           </button>
           <button
             className={classNames({ active: scrollLock })}
-            onClick={() => { setScrollLock(!scrollLock); }}>
-            {scrollLock ? <MdLockOutline /> : <MdLockOpen /> }
+            onClick={() => {
+              setScrollLock(!scrollLock);
+            }}>
+            {scrollLock ? <MdLockOutline /> : <MdLockOpen />}
           </button>
           <button
             onClick={async () => {
               const url = await navigator.clipboard.readText();
               const id = parseSonixUrl(url);
-              id && loadContent(id)
+              id && loadContent(id);
             }}>
             <MdContentPaste />
           </button>
         </IconContext.Provider>
       </div>
     </>
-  )
-})
+  );
+});
 
-export default App
-
+export default App;

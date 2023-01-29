@@ -1,12 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import classNames from 'classnames';
-import React from 'react';
-import { LoadForm } from './LoadForm';
-import {Exchange} from './Exchange';
-import { HistoryView } from './HistoryView';
-import { putHistoryRecord, HistoryRecord } from './historyStore';
-import {Content, fetchContent, TimeRange} from './sonixData'
-
+import { useCallback, useEffect, useRef, useState } from "react";
+import classNames from "classnames";
+import React from "react";
+import { LoadForm } from "./LoadForm";
+import { Exchange } from "./Exchange";
+import { HistoryView } from "./HistoryView";
+import { putHistoryRecord, HistoryRecord } from "./historyStore";
+import { Content, fetchContent, TimeRange } from "./sonixData";
 
 export type ExchangeWithRange = {
   // the speaker's name
@@ -15,12 +14,12 @@ export type ExchangeWithRange = {
   ts: TimeRange;
   // the individual word starts
   ws: readonly [TimeRange, string][];
-}
+};
 
 export type CurrentWord = {
   exch: TimeRange | undefined;
   word: TimeRange | undefined;
-}
+};
 
 type TranscriptScreenProps = {
   playing: boolean;
@@ -32,25 +31,37 @@ type TranscriptScreenProps = {
   current: CurrentWord | undefined;
   loadContent: (id: string) => Promise<void>;
 };
-export const TranscriptScreen = React.memo(function ({playing, onSeekTo, title, scrollLock, setScrollLock, current, transcript, loadContent }: TranscriptScreenProps) {
+export const TranscriptScreen = React.memo(function ({
+  playing,
+  onSeekTo,
+  title,
+  scrollLock,
+  setScrollLock,
+  current,
+  transcript,
+  loadContent,
+}: TranscriptScreenProps) {
   const appElement = useRef<HTMLDivElement>(null);
   const lastScroll = useRef<number>(0);
-  const onCurrent = useCallback((rect: DOMRect, word: string) => {
-    const app = appElement.current;
-    if (!app) {
-      return;
-    }
-    const top = app.scrollTop;
-    const threshTop = app.clientHeight / 4;
-    const threshBottom = threshTop * 3;
-    if (!scrollLock && (rect.y > threshBottom || rect.y < threshTop)) {
-      const scrollTarget = Math.round(Math.max(0, top + rect.y - threshTop));
-      console.log('scrolling to', scrollTarget)
-      app.scrollTo({ top: scrollTarget, behavior: 'smooth' });
-      // make it so that the scrolls for the next 200 ms are not considered to originate from the user
-      lastScroll.current = new Date().getTime();
-    }
-  }, [scrollLock]);
+  const onCurrent = useCallback(
+    (rect: DOMRect, word: string) => {
+      const app = appElement.current;
+      if (!app) {
+        return;
+      }
+      const top = app.scrollTop;
+      const threshTop = app.clientHeight / 4;
+      const threshBottom = threshTop * 3;
+      if (!scrollLock && (rect.y > threshBottom || rect.y < threshTop)) {
+        const scrollTarget = Math.round(Math.max(0, top + rect.y - threshTop));
+        console.log("scrolling to", scrollTarget);
+        app.scrollTo({ top: scrollTarget, behavior: "smooth" });
+        // make it so that the scrolls for the next 200 ms are not considered to originate from the user
+        lastScroll.current = new Date().getTime();
+      }
+    },
+    [scrollLock],
+  );
 
   return (
     <div
@@ -67,7 +78,7 @@ export const TranscriptScreen = React.memo(function ({playing, onSeekTo, title, 
         lastScroll.current = e.timeStamp;
 
         if (!scrollLock && isManual) {
-          console.log('scroll set by user');
+          console.log("scroll set by user");
           setScrollLock(true);
         }
       }}>
@@ -81,17 +92,20 @@ export const TranscriptScreen = React.memo(function ({playing, onSeekTo, title, 
         onSeekTo={onSeekTo}
       />
 
-      <LoadForm onGo={(id) => {
-        loadContent(id);
-      }} />
+      <LoadForm
+        onGo={(id) => {
+          loadContent(id);
+        }}
+      />
 
-      <HistoryView onGo={(id) => {
-        loadContent(id);
-      }}/>
+      <HistoryView
+        onGo={(id) => {
+          loadContent(id);
+        }}
+      />
     </div>
   );
 });
-
 
 type TranscriptViewProps = {
   playing: boolean;
@@ -99,8 +113,14 @@ type TranscriptViewProps = {
   current: CurrentWord | undefined;
   onCurrent: (rect: DOMRect, word: string) => void;
   onSeekTo: (time: number) => void;
-}
-export const TranscriptView = React.memo(function ({playing, transcript, current, onCurrent, onSeekTo}: TranscriptViewProps) {
+};
+export const TranscriptView = React.memo(function ({
+  playing,
+  transcript,
+  current,
+  onCurrent,
+  onSeekTo,
+}: TranscriptViewProps) {
   return (
     <div className={classNames("transcript", { paused: !playing })}>
       {transcript?.map(({ sn, ts, ws }) => (
@@ -109,21 +129,26 @@ export const TranscriptView = React.memo(function ({playing, transcript, current
           sn={sn}
           ts={ts}
           ws={ws}
-          currentWord={rangesEqual(ts, current?.exch) ? current?.word : undefined}
+          currentWord={
+            rangesEqual(ts, current?.exch) ? current?.word : undefined
+          }
           onCurrent={onCurrent}
-          onSeekTo={onSeekTo} />
+          onSeekTo={onSeekTo}
+        />
       ))}
     </div>
-  )
-})
+  );
+});
 
 export function inRange(range: TimeRange, time: number) {
   return range[0] <= time && range[1] > time;
 }
 
-export function rangesEqual(r1: TimeRange | undefined, r2: TimeRange | undefined) {
-  if (r1 === undefined || r2 === undefined)
-    return false;
+export function rangesEqual(
+  r1: TimeRange | undefined,
+  r2: TimeRange | undefined,
+) {
+  if (r1 === undefined || r2 === undefined) return false;
   return r1[0] === r2[0] && r1[1] === r2[1];
 }
 
@@ -134,7 +159,6 @@ export function formatTimestamp(ts: number) {
   const minutes = totalMinutes - totalHours * 60;
   const seconds = totalSeconds - totalMinutes * 60;
   return [totalHours, minutes, seconds]
-    .map(c => c.toString().padStart(2, '0'))
-    .join(':');
+    .map((c) => c.toString().padStart(2, "0"))
+    .join(":");
 }
-
